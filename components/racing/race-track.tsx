@@ -51,9 +51,9 @@ export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-slate-950 p-4 shadow-2xl">
-      {/* Cabecera */}
-      <div className="relative z-10 mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+    <div className="rounded-3xl border border-primary/40 bg-slate-950 p-4 shadow-2xl">
+      {/* Cabecera de Estado */}
+      <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">
             <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", phase === 'racing' ? "bg-red-500" : "bg-amber-500")} />
@@ -65,45 +65,47 @@ export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
         </div>
       </div>
 
-      {/* Pista */}
-      <div className="rounded-xl border border-white/10 p-3 bg-slate-900/90 shadow-inner">
-        <div className="space-y-4">
+      {/* Contenedor Visible de la Pista */}
+      <div className="rounded-xl border border-white/15 p-3 bg-slate-900 shadow-inner">
+        <div className="space-y-3">
           {horses.map((horse) => {
             const prog = progress.find((p) => p.horseId === horse.id);
-            // Permitimos que el progreso viaje de 0 a 100 de forma fluida
-            const pct = Math.max(0, Math.min(100, prog?.progress ?? 0));
+            const pct = Math.max(5, Math.min(95, prog?.progress ?? 0));
             const pos = positions.get(horse.id) ?? horse.id;
 
             return (
-              <div key={horse.id} className="relative">
-                <div className="flex items-center gap-3">
-                  {/* Posición */}
-                  <div className="flex w-7 shrink-0 justify-center items-center rounded-md bg-black/80 border border-white/20 py-1">
-                    <span className="text-xs font-bold text-white">{phase === 'betting' ? horse.id : pos}</span>
-                  </div>
+              <div key={horse.id} className="flex items-center gap-3 bg-black/40 p-2 rounded-xl border border-white/10">
+                {/* Posición / Número */}
+                <div className="flex w-7 shrink-0 justify-center items-center rounded-lg bg-slate-800 border border-white/20 py-1.5">
+                  <span className="text-xs font-bold text-white">
+                    {phase === 'betting' ? horse.id : pos}
+                  </span>
+                </div>
 
-                  {/* Carril con espacio interno para que el caballo no se corte al inicio */}
-                  <div className="relative h-14 flex-1 px-4 rounded-xl bg-black/60 border border-white/10 flex items-center">
-                    {/* Línea de pista de fondo */}
-                    <div className="absolute inset-x-4 h-1 bg-white/10 rounded-full" />
+                {/* Pista y Carril */}
+                <div className="relative h-12 flex-1 rounded-lg bg-slate-950 border border-white/20 overflow-hidden flex items-center px-2">
+                  {/* Línea de pista de fondo */}
+                  <div className="absolute inset-x-2 h-1 bg-white/10 rounded-full" />
 
-                    {/* Contenedor del Caballo controlado por el porcentaje de avance */}
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-linear z-30"
-                      style={{ left: `${pct}%` }}
-                    >
-                      <div className="h-12 w-12 -ml-6 flex items-center justify-center">
-                        <img
-                          src={getHorseImage(horse.id)}
-                          alt={`Caballo ${horse.id}`}
-                          className="h-full w-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]"
-                        />
-                      </div>
+                  {/* Caballo con movimiento porcentual */}
+                  <div 
+                    className="absolute top-1/2 -translate-y-1/2 transition-all duration-200 ease-linear z-20 flex items-center"
+                    style={{ left: `${pct}%` }}
+                  >
+                    <div className="h-10 w-10 -ml-5 flex items-center justify-center">
+                      <img
+                        src={getHorseImage(horse.id)}
+                        alt={`Caballo ${horse.id}`}
+                        className="h-full w-full object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/imagen_1_caballo-removebg-preview.png';
+                        }}
+                      />
                     </div>
-
-                    {/* Línea de Meta Amarilla fija al extremo derecho */}
-                    <div className="absolute right-3 top-2 bottom-2 w-1.5 bg-amber-400 z-20 rounded shadow-[0_0_10px_rgba(251,191,36,1)]" />
                   </div>
+
+                  {/* Línea de Meta Amarilla */}
+                  <div className="absolute right-2 top-1 bottom-1 w-1.5 bg-amber-400 rounded z-10 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
                 </div>
               </div>
             );
