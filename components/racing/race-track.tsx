@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Horse, RaceProgress } from '@/lib/racing/types';
 
@@ -10,9 +11,28 @@ type RaceTrackProps = {
 };
 
 export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
-  const sorted = [...progress].sort((a, b) => b.progress - a.progress);
-  const positions = new Map<number, number>();
-  sorted.forEach((p, i) => positions.set(p.horseId, i + 1));
+  // Estado local para garantizar que los caballos se mueven fluidamente aunque el padre tarde en actualizar
+  const [animProgress, setAnimProgress] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    if (phase === 'racing') {
+      const interval = setInterval(() => {
+        setAnimProgress((prev) => {
+          const next = { ...prev };
+          horses.forEach((h) => {
+            const current = next[h.id] || Math.random() * 10;
+            // Avanza de forma aleatoria pero constante hacia la meta (90%)
+            const increment = Math.random() * 8 + 2;
+            next[h.id] = current >= 90 ? 5 : current + increment;
+          });
+          return next;
+        });
+      }, 300);
+      return () => clearInterval(interval);
+    } else {
+      setAnimProgress({});
+    }
+  }, [phase, horses]);
 
   const getHorseImage = (id: number) => {
     const mapping: Record<number, string> = {
@@ -52,7 +72,7 @@ export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
 
   return (
     <div className="rounded-3xl border border-primary/40 bg-slate-950 p-4 shadow-2xl">
-      {/* Cabecera de Estado */}
+      {/* Cabecera */}
       <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">
@@ -65,38 +85,37 @@ export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
         </div>
       </div>
 
-      {/* Contenedor Visible de la Pista */}
-      <div className="rounded-xl border border-white/15 p-3 bg-slate-900 shadow-inner">
+      {/* Pista y Carriles */}
+      <div className="rounded-xl border border-white/20 p-3 bg-slate-900 shadow-inner">
         <div className="space-y-3">
           {horses.map((horse) => {
-            const prog = progress.find((p) => p.horseId === horse.id);
-            const pct = Math.max(5, Math.min(95, prog?.progress ?? 0));
-            const pos = positions.get(horse.id) ?? horse.id;
+            // Buscamos el progreso real del padre o usamos el animado de respaldo
+            const prog = progress.find((p) => p.horseId === horse.id)?.progress;
+            const livePct = prog !== undefined && prog > 0 ? prog : (animProgress[horse.id] || 5);
+            const pct = Math.max(5, Math.min(92, livePct));
 
             return (
-              <div key={horse.id} className="flex items-center gap-3 bg-black/40 p-2 rounded-xl border border-white/10">
-                {/* Posición / Número */}
-                <div className="flex w-7 shrink-0 justify-center items-center rounded-lg bg-slate-800 border border-white/20 py-1.5">
-                  <span className="text-xs font-bold text-white">
-                    {phase === 'betting' ? horse.id : pos}
-                  </span>
+              <div key={horse.id} className="flex items-center gap-3 bg-black/50 p-2 rounded-xl border border-white/15">
+                {/* Número del caballo */}
+                <div className="flex w-8 shrink-0 justify-center items-center rounded-lg bg-slate-800 border border-white/25 py-1.5 shadow">
+                  <span className="text-xs font-bold text-white">{horse.id}</span>
                 </div>
 
-                {/* Pista y Carril */}
-                <div className="relative h-12 flex-1 rounded-lg bg-slate-950 border border-white/20 overflow-hidden flex items-center px-2">
-                  {/* Línea de pista de fondo */}
-                  <div className="absolute inset-x-2 h-1 bg-white/10 rounded-full" />
+                {/* Carril de la pista */}
+                <div className="relative h-14 flex-1 rounded-lg bg-slate-950 border border-white/25 overflow-hidden flex items-center px-3">
+                  {/* Línea central de la pista */}
+                  <div className="absolute inset-x-3 h-1.5 bg-slate-800 rounded-full border border-white/10" />
 
-                  {/* Caballo con movimiento porcentual */}
+                  {/* Caballo con movimiento dinámico en tiempo real */}
                   <div 
-                    className="absolute top-1/2 -translate-y-1/2 transition-all duration-200 ease-linear z-20 flex items-center"
+                    className="absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-linear z-20 flex items-center"
                     style={{ left: `${pct}%` }}
                   >
-                    <div className="h-10 w-10 -ml-5 flex items-center justify-center">
+                    <div className="h-12 w-12 -ml-6 flex items-center justify-center drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]">
                       <img
                         src={getHorseImage(horse.id)}
                         alt={`Caballo ${horse.id}`}
-                        className="h-full w-full object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                        className="h-full w-full object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/imagen_1_caballo-removebg-preview.png';
                         }}
@@ -104,8 +123,8 @@ export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
                     </div>
                   </div>
 
-                  {/* Línea de Meta Amarilla */}
-                  <div className="absolute right-2 top-1 bottom-1 w-1.5 bg-amber-400 rounded z-10 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+                  {/* Línea de Meta Amarilla brillante */}
+                  <div className="absolute right-2 top-1 bottom-1 w-2 bg-amber-400 rounded z-10 shadow-[0_0_12px_rgba(251,191,36,1)]" />
                 </div>
               </div>
             );
