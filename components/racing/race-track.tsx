@@ -1,11 +1,57 @@
-<div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-slate-950 p-4 shadow-xl">
-      {/* Gradas */}
-      <div
-        className="absolute inset-x-0 top-0 h-24 opacity-40 pointer-events-none bg-cover bg-center border-b border-white/10"
-        style={{ backgroundImage: `url('/imagen_31_gradas_con_espectadores.png')` }}
-      />
+'use client';
 
-      {/* Estado */}
+import { cn } from '@/lib/utils';
+import type { Horse, RaceProgress } from '@/lib/racing/types';
+
+type RaceTrackProps = {
+  horses: Horse[];
+  progress: RaceProgress[];
+  phase: 'betting' | 'racing' | 'result';
+};
+
+export function RaceTrack({ horses, progress, phase }: RaceTrackProps) {
+  const sorted = [...progress].sort((a, b) => b.progress - a.progress);
+  const positions = new Map<number, number>();
+  sorted.forEach((p, i) => positions.set(p.horseId, i + 1));
+
+  const getHorseImage = (id: number) => {
+    const mapping: Record<number, string> = {
+      1: '/imagen_1_caballo-removebg-preview.png',
+      2: '/imagen_2_caballo-removebg-preview.png',
+      3: '/imagen 3 caballo.png',
+      4: '/imagen_4_caballo-removebg-preview.png',
+      5: '/imagen_5_caballo-removebg-preview.png',
+      6: '/imagen_6_caballo-removebg-preview.png',
+      7: '/imagen_7_caballo-removebg-preview.png',
+      8: '/imagen_8_caballo-removebg-preview.png',
+      9: '/imagen_9_caballo-removebg-preview.png',
+      10: '/imagen_10_caballo-removebg-preview.png',
+      11: '/imagen_11_caballo-removebg-preview.png',
+      12: '/imagen 12 caballo.png',
+      13: '/imagen_13_caballo-removebg-preview.png',
+      14: '/imagen_14_caballo-removebg-preview.png',
+      15: '/imagen15_caballos-removebg-preview.png',
+      16: '/imagen_16_caballo_-removebg-preview.png',
+      17: '/imagen_17_caballo-removebg-preview.png',
+      18: '/imagen_18_caballo-removebg-preview.png',
+      19: '/imagen_19_caballo-removebg-preview.png',
+      20: '/imagen_20_caballo-removebg-preview.png',
+      21: '/imagen_21_cabllo-removebg-preview.png',
+      22: '/imagen_22_caballo-removebg-preview.png',
+      23: '/imagen_23_caballo-removebg-preview.png',
+      24: '/imagen_24-removebg-preview.png',
+      25: '/imagen_25_caballo-removebg-preview.png',
+      26: '/imagen_26_caballo-removebg-preview.png',
+      27: '/imagen_27_caballo-removebg-preview.png',
+      28: '/imagen_28_caballo-removebg-preview.png',
+      29: '/imagen_29_caballo-removebg-preview.png',
+      30: '/imagen_30_caballo-removebg-preview.png',
+    };
+    return mapping[id] || '/imagen_1_caballo-removebg-preview.png';
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-slate-950 p-4 shadow-2xl">
       <div className="relative z-10 mb-4 flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">
@@ -18,15 +64,11 @@
         </div>
       </div>
 
-      {/* Pista */}
-      <div
-        className="relative rounded-xl border border-white/10 p-3 bg-cover bg-center"
-        style={{ backgroundImage: `url('/pista de carrera.jpg')` }}
-      >
-        <div className="space-y-3 relative z-10">
+      <div className="rounded-xl border border-white/10 p-3 bg-slate-900/80">
+        <div className="space-y-3">
           {horses.map((horse) => {
             const prog = progress.find((p) => p.horseId === horse.id);
-            const pct = Math.max(5, Math.min(95, prog?.progress ?? 0));
+            const pct = prog?.progress ?? 0;
             const pos = positions.get(horse.id) ?? 0;
 
             return (
